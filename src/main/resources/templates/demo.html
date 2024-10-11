@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>City Suggestions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        #suggestions {
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            position: absolute;
+            z-index: 1000;
+            background-color: white;
+            width: 300px;
+        }
+        .suggestion-item {
+            padding: 8px;
+            cursor: pointer;
+        }
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>City Suggestions</h1>
+<div style="position: relative;">
+    <input type="text" id="cityInput" placeholder="Type a city name..." autocomplete="off" />
+    <input type="number" id="latitudeInput" placeholder="Enter Latitude" step="0.000001" min="-90" max="90" />
+    <input type="number" id="longitudeInput" placeholder="Enter Longitude" step="0.000001" min="-180" max="180" />
+    <div id="suggestions"></div>
+</div>
+
+<script>
+    const cityInput = document.getElementById('cityInput');
+    const latitudeInput = document.getElementById('latitudeInput');
+    const longitudeInput = document.getElementById('longitudeInput');
+    const suggestionsDiv = document.getElementById('suggestions');
+
+    cityInput.addEventListener('input', function () {
+        const query = this.value;
+        const latitude = latitudeInput.value;
+        const longitude = longitudeInput.value;
+
+        // Clear previous suggestions
+        suggestionsDiv.innerHTML = '';
+
+        if (query.length === 0) {
+            return; // No input, do nothing
+        }
+
+        let url = `/suggestions?q=${query}`;
+        if (latitude && longitude) {
+            url = `/suggestions?q=${query}&latitude=${latitude}&longitude=${longitude}`
+        }
+
+        // Fetch city suggestions
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                // Populate suggestions
+                data.forEach(city => {
+                    const suggestionItem = document.createElement('div');
+                    suggestionItem.classList.add('suggestion-item');
+                    suggestionItem.textContent = city.name;
+
+                    suggestionItem.addEventListener('click', function () {
+                        cityInput.value = city.name; // Set input to selected city
+                        suggestionsDiv.innerHTML = ''; // Clear suggestions
+                    });
+
+                    suggestionsDiv.appendChild(suggestionItem);
+                });
+            })
+            .catch(error => console.error('Error fetching city suggestions:', error));
+    });
+</script>
+
+</body>
+</html>
